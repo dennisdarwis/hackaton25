@@ -3,6 +3,7 @@ const router = express.Router();
 const Message = require('./message.model');
 const Audio = require('./audio.model');
 const multer = require('multer');
+const { textInputForward } = require('../services/channel-adapter');
 const upload = multer();
 
 // Fetch all chat messages
@@ -13,7 +14,7 @@ router.get('/', async (req, res) => {
     if (!username) {
       return res.status(400).json({ error: 'Username header is required' });
     }
-    const messages = await Message.find({ isAudio: false, $or: [ { recipientName: username }, { senderName: username } ] }).sort({ datetime: 1 });
+    const messages = await Message.find({ isAudio: false, $or: [{ recipientName: username }, { senderName: username }] }).sort({ datetime: 1 });
     await new Promise(resolve => setTimeout(resolve, 500));
     res.json(messages);
   } catch (err) {
@@ -29,7 +30,7 @@ router.get('/audio', async (req, res) => {
     if (!username) {
       return res.status(400).json({ error: 'Username header is required' });
     }
-    const messages = await Message.find({ isAudio: true, $or: [ { recipientName: username }, { senderName: username } ] }).sort({ datetime: 1 });
+    const messages = await Message.find({ isAudio: true, $or: [{ recipientName: username }, { senderName: username }] }).sort({ datetime: 1 });
     await new Promise(resolve => setTimeout(resolve, 500));
     res.json(messages);
   } catch (err) {
@@ -45,16 +46,16 @@ router.post('/', async (req, res) => {
     if (!username) {
       return res.status(400).json({ error: 'Username header is required' });
     }
+
     const { type, message } = req.body;
+    const response = await textInputForward(message, username, username);
+    const responseMessage = response.forward_result.response_data.response.agent_response
+    // console.log(`lel ${responseMessage}`);
     const newMessage = new Message({ type, senderName: username, message, datetime: new Date().toISOString() });
     await newMessage.save();
-    // Send API request to Keren's AI Service
-    /**
-     * "text": "Yes,I confirm",
-        "user_id": "parthi_211",
-        "session_id": "parthi_213",
-        "channel": "chat"
-     */
+    // wait 3 seconds before sending the response
+    const receivedMessage = new Message({ type: 'receive', recipientName: username, senderName: null, message: responseMessage, datetime: new Date().toISOString() });
+    await receivedMessage.save();
 
     res.status(201).json(newMessage);
   } catch (err) {

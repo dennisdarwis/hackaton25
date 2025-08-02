@@ -76,7 +76,7 @@ function RouteComponent() {
   }, [])
 
   useEffect(() => {
-    if (!isReceiveLoading && convArray.length > 0) {
+    if (convArray.length > 0) {
       const chatContent = document.getElementById('chat-content');
       if (chatContent) {
         chatContent.scrollTo({
@@ -125,10 +125,13 @@ function RouteComponent() {
   const handleSendClick = async () => {
     const inputEl = document.getElementById('input-form') as HTMLInputElement | null;
     if (!inputEl || !inputEl.value) return;
-    setIsSendLoading(true);
+    const messageValue = inputEl.value;
+    inputEl.value = '';
+    setConvArray(prev => [...prev, { type: 'send', message: messageValue, datetime: new Date().toISOString() }]);
+    setIsReceiveLoading(true);
     const newMsg = {
       type: 'send',
-      message: inputEl.value,
+      message: messageValue,
       datetime: new Date().toISOString()
     };
     try {
@@ -138,8 +141,7 @@ function RouteComponent() {
         body: JSON.stringify(newMsg)
       });
       if (res.ok) {
-        inputEl.value = '';
-        await fetchMessages({ isSend: true });
+        await fetchMessages({ isReceive: true });
       }
     } catch (err) {
       // Optionally handle error
