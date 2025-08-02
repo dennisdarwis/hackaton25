@@ -1,12 +1,15 @@
 import AttachmentIcon from '@/components/icons/attachment-icon'
 import BackIcon from '@/components/icons/back-icon'
+import CheckIcon from '@/components/icons/check-icon'
 import MicrophoneIcon from '@/components/icons/microphone-icon'
 import SendIcon from '@/components/icons/send-icon'
 import SettingsIcon from '@/components/icons/settings-icon'
+import XIcon from '@/components/icons/x-icon'
 import { LoadingConvo, LoadingMessageReceive, LoadingMessageSend, ReceiveMessage, SendMessage } from '@/components/MessageBubbles'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Progress } from '@/components/ui/progress'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
@@ -61,6 +64,8 @@ function RouteComponent() {
   const [isReceiveLoading, setIsReceiveLoading] = useState(false);
   const [isSendLoading, setIsSendLoading] = useState(false);
   const [isConvoLoading, setIsConvoLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingProgress, setRecordingProgress] = useState(0);
 
 
   useEffect(() => {
@@ -78,6 +83,25 @@ function RouteComponent() {
       }
     }
   }, [isReceiveLoading, convArray])
+
+  useEffect(() => {
+    if (isRecording) {
+      const interval = setInterval(() => {
+        setRecordingProgress(prev => {
+          const increment = 100 / 120; // ~0.833 per second
+          if (prev >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return Math.min(prev + increment, 100);
+        });
+      }, 1000); // Update every second
+
+      return () => clearInterval(interval);
+    } else {
+      setRecordingProgress(0);
+    }
+  }, [isRecording])
 
 
   // Fetch messages from backend
@@ -114,9 +138,19 @@ function RouteComponent() {
   };
 
   const handleMicrophoneClick = () => {
+    setIsRecording(true);
     // TODO: Implement microphone logic
 
   };
+
+  const handleCancelRecordClick = () => {
+    setIsRecording(false);
+  }
+
+  const handleSendRecordClick = () => {
+    console.log(`Sending recorded audio...`);
+    setIsRecording(false);
+  }
 
 
   const handleSendClick = async () => {
@@ -190,7 +224,8 @@ function RouteComponent() {
           <AttachmentIcon id='attachment-button' color="#000000" onClick={handleAttachmentClick} />
         </div>
       </div>
-      <div className="col-span-8 flex flex-row items-center">
+      {!isRecording && (
+        <div className="col-span-8 flex flex-row items-center">
         <Input
           id='input-form'
           onKeyDown={e => {
@@ -215,6 +250,13 @@ function RouteComponent() {
           }}
         />
       </div>
+      )}
+      {isRecording && (
+        <div className="col-span-8 flex flex-row items-center">
+          <Progress id='recording-progress' className="w-full" value={recordingProgress} />
+        </div>
+      )}
+    {!isRecording && (
       <div className="col-span-1 flex items-center justify-center gap-4">
         <div className="cursor-pointer">
           <MicrophoneIcon id='microphone-button' color="#000000" onClick={handleMicrophoneClick} />
@@ -223,6 +265,17 @@ function RouteComponent() {
           <SendIcon id='send-button' color="#000000" onClick={handleSendClick} />
         </div>
       </div>
+    )}
+      {isRecording && (
+        <div className="col-span-1 flex items-center justify-center gap-4">
+          <div className="cursor-pointer">
+            <XIcon id='stop-button' color="#000000" onClick={handleCancelRecordClick} />
+          </div>
+          <div className="cursor-pointer">
+            <CheckIcon id='check-button' color="#000000" onClick={handleSendRecordClick} />
+          </div>
+        </div>
+      )}
     </div>
   </div>
 }
