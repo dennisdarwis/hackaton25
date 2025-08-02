@@ -1,3 +1,4 @@
+import { API_URL } from '@/commons/urls'
 import AttachmentIcon from '@/components/icons/attachment-icon'
 import BackIcon from '@/components/icons/back-icon'
 import CheckIcon from '@/components/icons/check-icon'
@@ -42,6 +43,8 @@ function renderConversation(convArray: any[]) {
           senderName={msg.senderName}
           message={msg.message}
           datetime={new Date(msg.datetime)}
+          isAudio={msg.isAudio}
+          audioURL={msg.audioURL}
         />
       );
     } else if (msg.type === 'send') {
@@ -50,6 +53,8 @@ function renderConversation(convArray: any[]) {
           key={key}
           message={msg.message}
           datetime={new Date(msg.datetime)}
+          isAudio={msg.isAudio}
+          audioURL={msg.audioURL}
         />
       );
     }
@@ -113,11 +118,13 @@ function RouteComponent() {
             }
           };
           recorder.onstop = () => {
-            const finalChunks = audioChunksRef.current.length ? audioChunksRef.current : audioChunks;
-            const blob = new Blob(finalChunks, { type: mimeType || 'audio/webm' });
-            stream.getTracks().forEach(track => track.stop());
-            setAudioBlob(blob);
-            sendAudio(blob);
+            if (audioChunksRef.current.length > 0) {
+              const finalChunks = audioChunksRef.current.length ? audioChunksRef.current : audioChunks;
+              const blob = new Blob(finalChunks, { type: mimeType || 'audio/webm' });
+              stream.getTracks().forEach(track => track.stop());
+              setAudioBlob(blob);
+              sendAudio(blob);
+            }
           };
           recorder.start();
         });
@@ -132,13 +139,13 @@ function RouteComponent() {
         });
       }, 1000);
     } else {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-      }
       setRecordingProgress(0);
       setAudioChunks([]);
       audioChunksRef.current = [];
       setAudioBlob(null);
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop()
+      }
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -183,7 +190,7 @@ function RouteComponent() {
       setIsSendLoading(true);
     }
     try {
-      const res = await fetch('http://localhost:5000/api/messages', {
+      const res = await fetch(`${API_URL}/api/messages`, {
         headers: {
           ...(username ? { 'username': username } : {})
         }
@@ -229,7 +236,7 @@ function RouteComponent() {
     formData.append('audio', blob, 'audio.webm');
     formData.append('datetime', new Date().toISOString());
     try {
-      const res = await fetch('http://localhost:5000/api/messages/audio', {
+      const res = await fetch(`${API_URL}/api/messages/audio`, {
         method: 'POST',
         headers: {
           ...(username ? { 'username': username } : {})
@@ -256,7 +263,7 @@ function RouteComponent() {
       datetime: new Date().toISOString()
     };
     try {
-      const res = await fetch('http://localhost:5000/api/messages', {
+      const res = await fetch(`${API_URL}/api/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(username ? { 'username': username } : {}) },
         body: JSON.stringify(newMsg)

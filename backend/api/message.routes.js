@@ -13,7 +13,6 @@ router.get('/', async (req, res) => {
     if (!username) {
       return res.status(400).json({ error: 'Username header is required' });
     }
-    console.log(`Fetching messages for recipient: ${username}`);
     const messages = await Message.find({ $or: [ { recipientName: username }, { senderName: username } ] }).sort({ datetime: 1 });
     await new Promise(resolve => setTimeout(resolve, 500));
     res.json(messages);

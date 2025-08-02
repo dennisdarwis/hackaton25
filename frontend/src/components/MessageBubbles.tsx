@@ -1,14 +1,23 @@
 import { Card } from '@/components/ui/card';
 import { Skeleton } from './ui/skeleton';
 import { renderWithLineBreaks } from '../lib/utils';
+import { API_URL } from '@/commons/urls';
 
-export const ReceiveMessage = ({ senderName, message, datetime }: { senderName: string, message: string, datetime: Date }) => {
+export const ReceiveMessage = ({ senderName, message, datetime, isAudio, audioURL }:
+    { senderName: string, message: string, datetime: Date, isAudio?: Boolean, audioURL?: string }) => {
     return (
         <div className="flex flex-row mt-4">
             <Card className='bg-[#f3f4f6] p-4 max-w-[70%] gap-0'>
                 <div className="text-xs font-medium">{senderName}</div>
                 <div className='whitespace-normal break-words'>
-                    {renderWithLineBreaks(message)}
+                    {!isAudio && renderWithLineBreaks(message)}
+                    {isAudio && audioURL && (
+                        <div>
+                            <audio controls className="w-full">
+                                <source src={`${API_URL}${audioURL}`} type="audio/webm" />
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>)}
                 </div>
                 <div className="text-xs">{datetime.toLocaleDateString()} {datetime.toLocaleTimeString()}</div>
             </Card>
@@ -16,12 +25,20 @@ export const ReceiveMessage = ({ senderName, message, datetime }: { senderName: 
     )
 }
 
-export const SendMessage = ({ message, datetime }: { message: string, datetime: Date }) => {
+export const SendMessage = ({ message, datetime, isAudio, audioURL }:
+    { message: string, datetime: Date, isAudio?: Boolean, audioURL?: string }) => {
     return (
         <div className="flex flex-row justify-end mt-4">
             <Card className='p-4 max-w-[70%] gap-0'>
                 <div className='whitespace-normal break-words'>
-                    {renderWithLineBreaks(message)}
+                    {!isAudio && renderWithLineBreaks(message)}
+                    {isAudio && audioURL && (
+                        <div>
+                            <audio controls className="w-full">
+                                <source src={`${API_URL}${audioURL}`} type="audio/webm" />
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>)}
                 </div>
                 <div className="text-xs">{datetime.toLocaleDateString()} {datetime.toLocaleTimeString()}</div>
             </Card>
