@@ -60,8 +60,9 @@ function RouteComponent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isConvoLoading, setIsConvoLoading] = useState(false);
 
+
   useEffect(() => {
-    loadConvo()
+    fetchMessages();
   }, [])
 
   useEffect(() => {
@@ -76,12 +77,18 @@ function RouteComponent() {
     }
   }, [isLoading, convArray])
 
-  const loadConvo = () => {
+
+  // Fetch messages from backend
+  const fetchMessages = async () => {
     setIsConvoLoading(true);
-    setTimeout(() => {
-      setConvArray(conversationJson);
-      setIsConvoLoading(false);
-    }, 2000); // Simulate loading delay
+    try {
+      const res = await fetch('http://localhost:5000/api/messages');
+      const data = await res.json();
+      setConvArray(data);
+    } catch (err) {
+      // Optionally handle error
+    }
+    setIsConvoLoading(false);
   }
 
   // Handler functions for chat input buttons
@@ -95,9 +102,30 @@ function RouteComponent() {
 
   };
 
-  const handleSendClick = () => {
-    // TODO: Implement send message logic
 
+  const handleSendClick = async () => {
+    const inputEl = document.getElementById('input-form') as HTMLInputElement | null;
+    if (!inputEl || !inputEl.value) return;
+    setIsLoading(true);
+    const newMsg = {
+      type: 'send',
+      message: inputEl.value,
+      datetime: new Date().toISOString()
+    };
+    try {
+      const res = await fetch('http://localhost:5000/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMsg)
+      });
+      if (res.ok) {
+        inputEl.value = '';
+        await fetchMessages();
+      }
+    } catch (err) {
+      // Optionally handle error
+    }
+    setIsLoading(false);
   };
 
   return <div className='flex flex-col h-screen'>
@@ -131,7 +159,7 @@ function RouteComponent() {
 
     {/* chat messages */}
     <div id='chat-content' className="flex flex-col grow mx-auto w-full overflow-y-auto items-center">
-      {!isConvoLoading && <div className="px-8 max-w-[800px] pb-2">
+      {!isConvoLoading && <div className="px-8 w-full max-w-[800px] pb-2">
         {renderConversation(convArray)}
         {isLoading && <LoadingMessageReceive />}
       </div>}
