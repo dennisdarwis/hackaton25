@@ -32,14 +32,28 @@ export const Route = createRootRoute({
     ],
   }),
   component: RootComponent,
+  // Removed loader, will check sessionStorage in client-side effect
 })
 
+import { useEffect } from 'react';
+import { useRouter } from '@tanstack/react-router';
+
 function RootComponent() {
+  const router = useRouter();
+  useEffect(() => {
+    // Only run in browser
+    if (typeof window !== 'undefined') {
+      const username = sessionStorage.getItem('username');
+      if (!username && window.location.pathname !== '/login') {
+        router.navigate({ to: '/login' });
+      }
+    }
+  }, [router]);
   return (
     <RootDocument>
       <Outlet />
     </RootDocument>
-  )
+  );
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
