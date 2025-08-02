@@ -3,7 +3,7 @@ import BackIcon from '@/components/icons/back-icon'
 import MicrophoneIcon from '@/components/icons/microphone-icon'
 import SendIcon from '@/components/icons/send-icon'
 import SettingsIcon from '@/components/icons/settings-icon'
-import { LoadingConvo, LoadingMessageReceive, ReceiveMessage, SendMessage } from '@/components/MessageBubbles'
+import { LoadingConvo, LoadingMessageReceive, LoadingMessageSend, ReceiveMessage, SendMessage } from '@/components/MessageBubbles'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -57,16 +57,17 @@ function renderConversation(convArray: any[]) {
 function RouteComponent() {
   const router = useRouter()
   const [convArray, setConvArray] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isReceiveLoading, setIsReceiveLoading] = useState(false);
+  const [isSendLoading, setIsSendLoading] = useState(false);
   const [isConvoLoading, setIsConvoLoading] = useState(false);
 
 
   useEffect(() => {
-    fetchMessages();
+    fetchMessages({ isStartup: true });
   }, [])
 
   useEffect(() => {
-    if (!isLoading && convArray.length > 0) {
+    if (!isReceiveLoading && convArray.length > 0) {
       const chatContent = document.getElementById('chat-content');
       if (chatContent) {
         chatContent.scrollTo({
@@ -75,12 +76,20 @@ function RouteComponent() {
         });
       }
     }
-  }, [isLoading, convArray])
+  }, [isReceiveLoading, convArray])
 
 
   // Fetch messages from backend
-  const fetchMessages = async () => {
-    setIsConvoLoading(true);
+  const fetchMessages = async (options: { isStartup?: boolean, isReceive?: boolean, isSend?: boolean }) => {
+    if(options.isStartup){
+      setIsConvoLoading(true);
+    }
+    if(options.isReceive){
+      setIsReceiveLoading(true);
+    }
+    if(options.isSend){
+      setIsSendLoading(true);
+    }
     try {
       const res = await fetch('http://localhost:5000/api/messages');
       const data = await res.json();
@@ -89,6 +98,8 @@ function RouteComponent() {
       // Optionally handle error
     }
     setIsConvoLoading(false);
+    setIsReceiveLoading(false);
+    setIsSendLoading(false);
   }
 
   // Handler functions for chat input buttons
@@ -106,7 +117,7 @@ function RouteComponent() {
   const handleSendClick = async () => {
     const inputEl = document.getElementById('input-form') as HTMLInputElement | null;
     if (!inputEl || !inputEl.value) return;
-    setIsLoading(true);
+    setIsSendLoading(true);
     const newMsg = {
       type: 'send',
       message: inputEl.value,
@@ -120,12 +131,12 @@ function RouteComponent() {
       });
       if (res.ok) {
         inputEl.value = '';
-        await fetchMessages();
+        await fetchMessages({ isSend: true });
       }
     } catch (err) {
       // Optionally handle error
     }
-    setIsLoading(false);
+    setIsReceiveLoading(false);
   };
 
   return <div className='flex flex-col h-screen'>
@@ -161,7 +172,8 @@ function RouteComponent() {
     <div id='chat-content' className="flex flex-col grow mx-auto w-full overflow-y-auto items-center">
       {!isConvoLoading && <div className="px-8 w-full max-w-[800px] pb-2">
         {renderConversation(convArray)}
-        {isLoading && <LoadingMessageReceive />}
+        {isReceiveLoading && <LoadingMessageReceive />}
+        {isSendLoading && <LoadingMessageSend />}
       </div>}
       {isConvoLoading && <LoadingConvo />}
     </div>
