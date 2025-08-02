@@ -7,7 +7,7 @@ import { LoadingConvo, LoadingMessageReceive, ReceiveMessage, SendMessage } from
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
 export const Route = createFileRoute('/chat-interface')({
@@ -55,6 +55,7 @@ function renderConversation(convArray: any[]) {
 }
 
 function RouteComponent() {
+  const router = useRouter()
   const [convArray, setConvArray] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isConvoLoading, setIsConvoLoading] = useState(false);
@@ -91,12 +92,12 @@ function RouteComponent() {
 
   const handleMicrophoneClick = () => {
     // TODO: Implement microphone logic
-    
+
   };
 
   const handleSendClick = () => {
     // TODO: Implement send message logic
-    
+
   };
 
   return <div className='flex flex-col h-screen'>
@@ -104,7 +105,9 @@ function RouteComponent() {
     <div id='navbar' className="flex-none bg-[#013d83] grid grid-cols-10 py-2 px-4 text-white">
       <div className="col-span-1 text-white flex items-center justify-center">
         <div className="cursor-pointer">
-          <BackIcon onClick={() => { }} />
+          <BackIcon onClick={() => {
+            router.navigate({ to: '/' });
+          }} />
         </div>
       </div>
       <div className="col-span-8 flex flex-row items-center">
@@ -134,7 +137,7 @@ function RouteComponent() {
       </div>}
       {isConvoLoading && <LoadingConvo />}
     </div>
-        
+
     {/* chat box */}
     <div id='chat-input' className="flex-none bg-[#ffffff] border-1 border-t-[#eeeeee]-500 grid grid-cols-10 py-2 px-4 text-black">
       <div className="col-span-1 text-white flex items-center justify-center">
