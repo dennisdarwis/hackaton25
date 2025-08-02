@@ -56,6 +56,7 @@ function renderConversation(convArray: any[]) {
 
 function RouteComponent() {
   const router = useRouter()
+  const username = sessionStorage.getItem('username');
   const [convArray, setConvArray] = useState<any[]>([]);
   const [isReceiveLoading, setIsReceiveLoading] = useState(false);
   const [isSendLoading, setIsSendLoading] = useState(false);
@@ -91,7 +92,11 @@ function RouteComponent() {
       setIsSendLoading(true);
     }
     try {
-      const res = await fetch('http://localhost:5000/api/messages');
+      const res = await fetch('http://localhost:5000/api/messages', {
+        headers: {
+          ...(username ? { 'username': username } : {})
+        }
+      });
       const data = await res.json();
       setConvArray(data);
     } catch (err) {
@@ -126,7 +131,7 @@ function RouteComponent() {
     try {
       const res = await fetch('http://localhost:5000/api/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(username ? { 'username': username } : {}) },
         body: JSON.stringify(newMsg)
       });
       if (res.ok) {
@@ -186,7 +191,29 @@ function RouteComponent() {
         </div>
       </div>
       <div className="col-span-8 flex flex-row items-center">
-        <Input id='input-form' />
+        <Input
+          id='input-form'
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              if (e.shiftKey) {
+                // Insert line break at cursor position
+                const input = e.target as HTMLInputElement;
+                const start = input.selectionStart || 0;
+                const end = input.selectionEnd || 0;
+                const value = input.value;
+                input.value = value.slice(0, start) + '\n' + value.slice(end);
+                // Move cursor after the line break
+                setTimeout(() => {
+                  input.selectionStart = input.selectionEnd = start + 1;
+                }, 0);
+                e.preventDefault();
+              } else {
+                e.preventDefault();
+                handleSendClick();
+              }
+            }
+          }}
+        />
       </div>
       <div className="col-span-1 flex items-center justify-center gap-4">
         <div className="cursor-pointer">

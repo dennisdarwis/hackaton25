@@ -10,6 +10,7 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const router = useRouter()
+  const username = sessionStorage.getItem('username');
   const state = Route.useLoaderData()
 
   return (
@@ -33,7 +34,7 @@ function Home() {
         <div className="col-span-1 text-white flex items-center justify-center"></div>
         <div className="col-span-9 flex flex-row items-center">
           <Card className='bg-[#2A518A] p-4 max-w-[80%] gap-0 border-0'>
-            <div className="text-xs font-medium text-white">Welcome back, user</div>
+            <div className="text-xs font-medium text-white">Welcome back, {username}</div>
             <div className="text-xs text-white">Last contact: Card replacement inquiry (5 days ago)</div>
           </Card>
         </div>
