@@ -55,7 +55,7 @@ function Home() {
         <div className="px-4 max-w-[1000px] pb-2 grid grid-cols-12">
           {[ 
             { label: "Live Chat", description: "Chat with our support team", icon: "💬", onClick: () => router.navigate({to: '/chat-interface'}) },
-            { label: "Phone Support", description: "Call us directly", icon: "📞", onClick: () => router.navigate({to: '/chat-interface'}) },
+            { label: "Phone Support", description: "Call us directly", icon: "📞", onClick: () => router.navigate({to: '/call-interface'}) },
             { label: "Email Support", description: "Send us a message", icon: "✉️", onClick: () => router.navigate({to: '/chat-interface'}) },
           ].map((card) => (
             <Card

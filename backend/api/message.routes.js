@@ -5,7 +5,7 @@ const Audio = require('./audio.model');
 const multer = require('multer');
 const upload = multer();
 
-// Fetch all messages
+// Fetch all chat messages
 // Fetch messages for a specific recipient (username from header)
 router.get('/', async (req, res) => {
   try {
@@ -13,7 +13,23 @@ router.get('/', async (req, res) => {
     if (!username) {
       return res.status(400).json({ error: 'Username header is required' });
     }
-    const messages = await Message.find({ $or: [ { recipientName: username }, { senderName: username } ] }).sort({ datetime: 1 });
+    const messages = await Message.find({ isAudio: false, $or: [ { recipientName: username }, { senderName: username } ] }).sort({ datetime: 1 });
+    await new Promise(resolve => setTimeout(resolve, 500));
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Fetch all audio messages
+// Fetch messages for a specific recipient (username from header)
+router.get('/audio', async (req, res) => {
+  try {
+    const username = req.headers['username'];
+    if (!username) {
+      return res.status(400).json({ error: 'Username header is required' });
+    }
+    const messages = await Message.find({ isAudio: true, $or: [ { recipientName: username }, { senderName: username } ] }).sort({ datetime: 1 });
     await new Promise(resolve => setTimeout(resolve, 500));
     res.json(messages);
   } catch (err) {
@@ -32,6 +48,14 @@ router.post('/', async (req, res) => {
     const { type, message } = req.body;
     const newMessage = new Message({ type, senderName: username, message, datetime: new Date().toISOString() });
     await newMessage.save();
+    // Send API request to Keren's AI Service
+    /**
+     * "text": "Yes,I confirm",
+        "user_id": "parthi_211",
+        "session_id": "parthi_213",
+        "channel": "chat"
+     */
+
     res.status(201).json(newMessage);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -67,6 +91,15 @@ router.post('/audio', upload.single('audio'), async (req, res) => {
       isAudio: true,
       audioURL
     });
+
+    // Send API request to Keren's AI Service
+    /**
+     * "text": "Yes,I confirm",
+        "user_id": "parthi_211",
+        "session_id": "parthi_213",
+        "channel": "chat"
+        "file": file binary
+     */
     await newMessage.save();
     res.status(201).json(newMessage);
   } catch (err) {

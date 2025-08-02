@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ChatInterfaceRouteImport } from './routes/chat-interface'
+import { Route as CallInterfaceRouteImport } from './routes/call-interface'
 import { Route as IndexRouteImport } from './routes/index'
 
 const LoginRoute = LoginRouteImport.update({
@@ -23,6 +24,11 @@ const ChatInterfaceRoute = ChatInterfaceRouteImport.update({
   path: '/chat-interface',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CallInterfaceRoute = CallInterfaceRouteImport.update({
+  id: '/call-interface',
+  path: '/call-interface',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,30 +37,34 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/call-interface': typeof CallInterfaceRoute
   '/chat-interface': typeof ChatInterfaceRoute
   '/login': typeof LoginRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/call-interface': typeof CallInterfaceRoute
   '/chat-interface': typeof ChatInterfaceRoute
   '/login': typeof LoginRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/call-interface': typeof CallInterfaceRoute
   '/chat-interface': typeof ChatInterfaceRoute
   '/login': typeof LoginRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chat-interface' | '/login'
+  fullPaths: '/' | '/call-interface' | '/chat-interface' | '/login'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chat-interface' | '/login'
-  id: '__root__' | '/' | '/chat-interface' | '/login'
+  to: '/' | '/call-interface' | '/chat-interface' | '/login'
+  id: '__root__' | '/' | '/call-interface' | '/chat-interface' | '/login'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CallInterfaceRoute: typeof CallInterfaceRoute
   ChatInterfaceRoute: typeof ChatInterfaceRoute
   LoginRoute: typeof LoginRoute
 }
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatInterfaceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/call-interface': {
+      id: '/call-interface'
+      path: '/call-interface'
+      fullPath: '/call-interface'
+      preLoaderRoute: typeof CallInterfaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CallInterfaceRoute: CallInterfaceRoute,
   ChatInterfaceRoute: ChatInterfaceRoute,
   LoginRoute: LoginRoute,
 }
