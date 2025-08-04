@@ -79,7 +79,7 @@ function RouteComponent() {
   }, [])
 
   useEffect(() => {
-    if (!isReceiveLoading && convArray.length > 0) {
+    if (convArray.length > 0) {
       const chatContent = document.getElementById('chat-content');
       if (chatContent) {
         chatContent.scrollTo({
@@ -210,6 +210,8 @@ function RouteComponent() {
     const formData = new FormData();
     formData.append('audio', blob, 'audio.webm');
     formData.append('datetime', new Date().toISOString());
+    setConvArray(prev => [...prev, { type: 'send', isAudio: true, audioURL: '/api/messages/audio', datetime: new Date().toISOString() }]);
+    setIsReceiveLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/messages/audio`, {
         method: 'POST',
@@ -225,6 +227,7 @@ function RouteComponent() {
     } catch (err) {
       console.error('Error sending audio:', err);
     }
+    setIsReceiveLoading(false);
   }
 
   return <div className='flex flex-col h-screen'>

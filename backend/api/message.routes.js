@@ -3,7 +3,7 @@ const router = express.Router();
 const Message = require('./message.model');
 const Audio = require('./audio.model');
 const multer = require('multer');
-const { textInputForward } = require('../services/channel-adapter');
+const { textInputForward, sendVoiceToVoice } = require('../services/channel-adapter');
 const upload = multer();
 
 // Fetch all chat messages
@@ -11,13 +11,16 @@ const upload = multer();
 router.get('/', async (req, res) => {
   try {
     const username = req.headers['username'];
+    console.log('Fetching messages for username:', username);
     if (!username) {
+      console.log('Username header is missing');
       return res.status(400).json({ error: 'Username header is required' });
     }
     const messages = await Message.find({ isAudio: false, $or: [{ recipientName: username }, { senderName: username }] }).sort({ datetime: 1 });
-    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log('Fetched messages:', messages.length);
     res.json(messages);
   } catch (err) {
+    console.error('Error fetching messages:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -53,7 +56,7 @@ router.post('/', async (req, res) => {
     // console.log(`lel ${responseMessage}`);
     const newMessage = new Message({ type, senderName: username, message, datetime: new Date().toISOString() });
     await newMessage.save();
-    // wait 3 seconds before sending the response
+
     const receivedMessage = new Message({ type: 'receive', recipientName: username, senderName: null, message: responseMessage, datetime: new Date().toISOString() });
     await receivedMessage.save();
 
@@ -92,16 +95,31 @@ router.post('/audio', upload.single('audio'), async (req, res) => {
       isAudio: true,
       audioURL
     });
+    await newMessage.save();
+
+
 
     // Send API request to Keren's AI Service
-    /**
-     * "text": "Yes,I confirm",
-        "user_id": "parthi_211",
-        "session_id": "parthi_213",
-        "channel": "chat"
-        "file": file binary
-     */
-    await newMessage.save();
+    // Send request to external voice-to-voice API
+    const response = await sendVoiceToVoice(audioBuffer, username, username);
+     // Save audio to Audio collection
+    const respAudioDoc = new Audio({
+      data: response.buffer,
+      contentType: "audio/x-m4a"
+    });
+    await respAudioDoc.save();
+    // Reference audio by its MongoDB ObjectId
+    const respAudioURL = `/api/messages/audio/${respAudioDoc._id}`;
+    const receivedMessage = new Message({
+      type: 'receive',
+      recipientName: username,
+      message: '', // No text message
+      datetime: new Date().toISOString(),
+      isAudio: true,
+      audioURL: respAudioURL
+    });
+    await receivedMessage.save();
+
     res.status(201).json(newMessage);
   } catch (err) {
     res.status(400).json({ error: err.message });
