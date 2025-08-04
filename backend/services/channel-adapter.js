@@ -8,7 +8,7 @@ const FormData = require('form-data');
  * @param {string} sessionId - Session ID
  * @returns {Promise<Response>} - Fetch response
  */
-async function sendVoiceToVoice(audioBuffer, userId, sessionId) {
+async function sendVoiceToVoice(audioBuffer, userId, sessionId, authorization) {
   const form = new FormData();
   form.append('file', audioBuffer, {
     filename: 'audio.m4a',
@@ -28,6 +28,7 @@ async function sendVoiceToVoice(audioBuffer, userId, sessionId) {
         body: form,
         headers: {
           ...form.getHeaders(),
+          'Authorization': authorization,
           'accept': 'application/json'
         }
       }
@@ -47,7 +48,7 @@ async function sendVoiceToVoice(audioBuffer, userId, sessionId) {
 
 const channel = "chat"
 
-async function textInputForward(text, userId, sessionId) {
+async function textInputForward(text, userId, sessionId, authorization) {
   const params = new URLSearchParams();
   params.append('text', text);
   params.append('source', '');
@@ -62,7 +63,8 @@ async function textInputForward(text, userId, sessionId) {
     method: 'POST',
     headers: {
       'accept': 'application/json',
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': authorization
     },
     body: params.toString()
   });

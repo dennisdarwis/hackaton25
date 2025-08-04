@@ -7,12 +7,15 @@ const { login } = require('../services/login');
 router.post('/', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
+        console.warn('Missing username or password');
         return res.status(400).json({ error: 'Username and password are required.' });
     }
     try {
         const tokenData = await login(username, password);
+        console.log('Login successful for user:', username);
         res.json(tokenData);
     } catch (error) {
+        console.error('Login failed for user:', username, 'Error:', error.message);
         res.status(401).json({ error: error.message });
     }
 });

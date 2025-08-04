@@ -47,21 +47,30 @@ router.post('/', async (req, res) => {
   try {
     const username = req.headers['username'];
     if (!username) {
+      console.warn('Username header missing in text message POST');
       return res.status(400).json({ error: 'Username header is required' });
     }
 
     const { type, message } = req.body;
-    const response = await textInputForward(message, username, username);
-    const responseMessage = response.forward_result.response_data.response.agent_response
-    // console.log(`lel ${responseMessage}`);
+    console.log('Creating new message:', { type, senderName: username, message });
     const newMessage = new Message({ type, senderName: username, message, datetime: new Date().toISOString() });
     await newMessage.save();
+    console.log('New message saved:', newMessage);
 
+    console.log('Forwarding message to textInputForward:', { message, username });
+    const response = await textInputForward(message, username, username, req.headers['authorization']);
+    console.log('Received response from textInputForward:', response);
+    const responseMessage = response.forward_result.response_data.response.agent_response;
+
+    console.log('Creating received message:', { type: 'receive', recipientName: username, senderName: null, message: responseMessage });
     const receivedMessage = new Message({ type: 'receive', recipientName: username, senderName: null, message: responseMessage, datetime: new Date().toISOString() });
     await receivedMessage.save();
+    console.log('Received message saved:', receivedMessage);
 
+    console.log('Text message saved:', newMessage);
     res.status(201).json(newMessage);
   } catch (err) {
+    console.error('Error in text message POST:', err.message);
     res.status(400).json({ error: err.message });
   }
 });
@@ -69,12 +78,15 @@ router.post('/', async (req, res) => {
 // Send a new audio message
 router.post('/audio', upload.single('audio'), async (req, res) => {
   try {
+    console.log('Audio message POST request:', { headers: req.headers, body: req.body });
     const username = req.headers['username'];
     if (!username) {
+      console.warn('Username header missing in audio message POST');
       return res.status(400).json({ error: 'Username header is required' });
     }
     const { type = 'send' } = req.body;
     if (!req.file) {
+      console.warn('Audio file missing in audio message POST');
       return res.status(400).json({ error: 'Audio file is required' });
     }
     const audioBuffer = req.file.buffer;
@@ -97,12 +109,10 @@ router.post('/audio', upload.single('audio'), async (req, res) => {
     });
     await newMessage.save();
 
-
-
     // Send API request to Keren's AI Service
     // Send request to external voice-to-voice API
-    const response = await sendVoiceToVoice(audioBuffer, username, username);
-     // Save audio to Audio collection
+    const response = await sendVoiceToVoice(audioBuffer, username, username, req.headers['authorization']);
+    // Save audio to Audio collection
     const respAudioDoc = new Audio({
       data: response.buffer,
       contentType: "audio/x-m4a"
@@ -120,8 +130,10 @@ router.post('/audio', upload.single('audio'), async (req, res) => {
     });
     await receivedMessage.save();
 
+    console.log('Audio message saved:', newMessage);
     res.status(201).json(newMessage);
   } catch (err) {
+    console.error('Error in audio message POST:', err.message);
     res.status(400).json({ error: err.message });
   }
 });
