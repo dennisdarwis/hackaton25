@@ -100,9 +100,11 @@ function RouteComponent() {
       setIsSendLoading(true);
     }
     try {
+      const accessToken = sessionStorage.getItem('access_token');
       const res = await fetch(`${API_URL}/api/messages`, {
         headers: {
-          ...(username ? { 'username': username } : {})
+          ...(username ? { 'username': username } : {}),
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
         }
       });
       const data = await res.json();
@@ -135,9 +137,14 @@ function RouteComponent() {
       datetime: new Date().toISOString()
     };
     try {
+      const accessToken = sessionStorage.getItem('access_token');
       const res = await fetch(`${API_URL}/api/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(username ? { 'username': username } : {}) },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(username ? { 'username': username } : {}),
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+        },
         body: JSON.stringify(newMsg)
       });
       if (res.ok) {
@@ -182,8 +189,8 @@ function RouteComponent() {
     <div id='chat-content' className="flex flex-col grow mx-auto w-full overflow-y-auto items-center">
       {!isConvoLoading && <div className="px-8 w-full max-w-[800px] pb-2">
         {renderConversation(convArray)}
-        {isReceiveLoading && <LoadingMessageReceive />}
         {isSendLoading && <LoadingMessageSend />}
+        {isReceiveLoading && <LoadingMessageReceive />}
       </div>}
       {isConvoLoading && <LoadingConvo />}
     </div>

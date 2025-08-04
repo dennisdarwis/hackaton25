@@ -44,7 +44,27 @@ function RootComponent() {
     // Only run in browser
     if (typeof window !== 'undefined') {
       const username = sessionStorage.getItem('username');
+      const accessToken = sessionStorage.getItem('access_token');
+
+      // Helper to decode JWT and get exp
+      function getTokenExp(token) {
+        if (!token) return null;
+        try {
+          const payload = token.split('.')[1];
+          const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+          return decoded.exp;
+        } catch {
+          return null;
+        }
+      }
+
+      const exp = getTokenExp(accessToken);
+      const now = Math.floor(Date.now() / 1000);
+
       if (!username && window.location.pathname !== '/login') {
+        router.navigate({ to: '/login' });
+      } else if (exp && now > exp) {
+        sessionStorage.clear();
         router.navigate({ to: '/login' });
       }
     }

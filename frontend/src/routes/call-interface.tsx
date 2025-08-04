@@ -62,6 +62,7 @@ function renderConversation(convArray: any[]) {
 function RouteComponent() {
   const router = useRouter()
   const username = sessionStorage.getItem('username');
+  const accessToken = sessionStorage.getItem('access_token');
   const [convArray, setConvArray] = useState<any[]>([]);
   const [isReceiveLoading, setIsReceiveLoading] = useState(false);
   const [isSendLoading, setIsSendLoading] = useState(false);
@@ -167,7 +168,8 @@ function RouteComponent() {
     try {
       const res = await fetch(`${API_URL}/api/messages/audio`, {
         headers: {
-          ...(username ? { 'username': username } : {})
+          ...(username ? { 'username': username } : {}),
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
         }
       });
       const data = await res.json();
@@ -210,13 +212,15 @@ function RouteComponent() {
     const formData = new FormData();
     formData.append('audio', blob, 'audio.webm');
     formData.append('datetime', new Date().toISOString());
-    setConvArray(prev => [...prev, { type: 'send', isAudio: true, audioURL: '/api/messages/audio', datetime: new Date().toISOString() }]);
+    // setConvArray(prev => [...prev, { type: 'send', isAudio: true, audioURL: '/api/messages/audio', datetime: new Date().toISOString() }]);
+    setIsSendLoading(true);
     setIsReceiveLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/messages/audio`, {
         method: 'POST',
         headers: {
-          ...(username ? { 'username': username } : {})
+          ...(username ? { 'username': username } : {}),
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
         },
         body: formData
       });
@@ -227,6 +231,7 @@ function RouteComponent() {
     } catch (err) {
       console.error('Error sending audio:', err);
     }
+    setIsSendLoading(false);
     setIsReceiveLoading(false);
   }
 
@@ -263,8 +268,8 @@ function RouteComponent() {
     <div id='chat-content' className="flex flex-col grow mx-auto w-full overflow-y-auto items-center">
       {!isConvoLoading && <div className="px-8 w-full max-w-[800px] pb-2">
         {renderConversation(convArray)}
-        {isReceiveLoading && <LoadingMessageReceive />}
         {isSendLoading && <LoadingMessageSend />}
+        {isReceiveLoading && <LoadingMessageReceive />}
       </div>}
       {isConvoLoading && <LoadingConvo />}
     </div>
